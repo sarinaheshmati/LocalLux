@@ -34,3 +34,27 @@ cloudinary.config({
 router.get("/new", middleware.isLoggedIn, function(req,res){
 	res.render("apartments/new");
 });
+
+// Create Route for a host's apartment
+router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,res)=> {
+	req.body.apartment["images"] = [];
+
+	var	i=0;
+	// For each uploaded image
+	for(const file of req.files){
+		var image = await cloudinary.v2.uploader.upload(file.path);
+		// The firstly uploaded image should be the apartment's main image
+		if(i == 0){
+			req.body.apartment["main_image"] = {
+				url: image.secure_url,
+				public_id: image.public_id
+			};
+		}else{
+			req.body.apartment.images.push({
+				url: image.secure_url,
+				public_id: image.public_id
+			});
+		}
+	
+		i += 1;
+	}}
