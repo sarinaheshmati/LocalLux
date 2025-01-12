@@ -29,3 +29,8 @@ cloudinary.config({
 	api_key: process.env.CLOUDINARY_API_KEY,
 	api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// New Route for a host's apartment
+router.get("/new", middleware.isLoggedIn, function(req,res){
+	res.render("apartments/new");
+});
