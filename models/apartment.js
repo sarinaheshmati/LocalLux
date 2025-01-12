@@ -61,7 +61,11 @@ var apartmentSchema = mongoose.Schema({
 		}
 	],
 
-
+	capacity: Number,					// maximum number of persons
+	host: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User"
+	},
 
 
 
