@@ -11,3 +11,5 @@ var reviewSchema = mongoose.Schema({
 		ref: "User"
 	}
 });
+
+module.exports = mongose.model("Review", reviewSchema);
