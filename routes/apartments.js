@@ -96,3 +96,98 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 	req.body.apartment["host"] = Object.assign({}, req.user._doc);
 	req.body.apartment["reservations"] = [];
 	req.body.apartment["reviews"] = [];
+
+
+	// Use default values if needed
+	var	tempApartment = new apartment({});
+	if(!req.body.apartment.place.living_room){
+		req.body.apartment.place.living_room = tempApartment.place.living_room;
+	}
+	if(!req.body.apartment.renting_rules.smoking){
+		req.body.apartment.renting_rules.smoking = tempApartment.renting_rules.smoking;
+	}
+	if(!req.body.apartment.renting_rules.pets){
+		req.body.apartment.renting_rules.pets = tempApartment.renting_rules.pets;
+	}
+	if(!req.body.apartment.renting_rules.events){
+		req.body.apartment.renting_rules.eventse = tempApartment.renting_rules.events;
+	}
+	if(!req.body.apartment.facilities.wifi){
+		req.body.apartment.facilities.wifi = tempApartment.facilities.wifi;
+	}
+	if(!req.body.apartment.facilities.air_conditioning){
+		req.body.apartment.facilities.air_conditioning = tempApartment.facilities.air_conditioning;
+	}
+	if(!req.body.apartment.facilities.heating){
+		req.body.apartment.facilities.heating = tempApartment.facilities.heating;
+	}
+	if(!req.body.apartment.facilities.kitchen){
+		req.body.apartment.facilities.kitchen = tempApartment.facilities.kitchen;
+	}
+	if(!req.body.apartment.facilities.tv){
+		req.body.apartment.facilities.tv = tempApartment.facilities.tv;
+	}
+	if(!req.body.apartment.facilities.parking){
+		req.body.apartment.facilities.parking = tempApartment.facilities.parking;
+	}
+	if(!req.body.apartment.facilities.elevator){
+		req.body.apartment.facilities.elevator = tempApartment.facilities.elevator;
+	}
+
+	var reverse_geocoding = false;
+	for([key, value] of Object.entries(req.body)){
+		if(typeof value == 'string' && value == 'reverse_geocoding'){
+			req.body.apartment.location.address = key;
+			var greeklish = greekUtils.toGreeklish(req.body.apartment.location.address);
+			reverse_geocoding = true;
+			break;
+		}
+	}
+
+	var latitude;
+	var longitude;
+
+	geocoder.geocode(req.body.apartment.location.address, function(err, data){
+    	if(err){
+			req.flash("error", err.message);
+			return res.redirect('back');
+		}else if(!data.length){
+			req.flash('error', 'Invalid address');
+    		return res.redirect('back');
+     	}
+
+    	req.body.apartment.location.lat 	= data[0].latitude;
+    	req.body.apartment.location.lng  	= data[0].longitude;
+		if(reverse_geocoding){
+			req.body.apartment.location.address += "," + data[0].country;
+		}
+
+		req.body.apartment.location.address = tr(req.body.apartment.location.address);		//Making Normal 
+
+		// Find current user in db
+		User.findById(req.user._id, function(err, user){
+			if(err){
+				req.flash("error", err.message);
+				res.redirect("/users/" + user._id + "/host");
+			}else if(!user){
+				req.flash("error", "User not found");
+				res.redirect("back");
+			}else{
+				// Create apartment in db
+				apartment.create(req.body.apartment, function(err, apartment){
+					if(err){
+						req.flash("error", err.message);
+						res.redirect("/users/" + user._id + "/host");
+					}else{
+						apartment.save();
+						user.apartments.push(apartment);
+						user.save();
+						req.flash("success", "Added " + apartment.name + " successfully!");
+						res.redirect("/users/" + user._id + "/host");
+					}
+				});
+			}
+		});
+
+	});
+
