@@ -17,3 +17,5 @@ const express			= require("express"),
 		formatter:null
 	  };
 	  
+
+	  var geocoder = NodeGeocoder(options);
