@@ -87,3 +87,12 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 	};
 	req.body.apartment["availability"] = [];
 	req.body.apartment.availability.push(availability);
+
+	// Get apartment objects from new.ejs
+	req.body.apartment["place"] = Object.assign({}, req.body.place);
+	req.body.apartment["renting_rules"] = Object.assign({}, req.body.renting_rules);
+	req.body.apartment["facilities"] = Object.assign({}, req.body.facilities);
+	req.body.apartment["location"] = Object.assign({}, req.body.location);
+	req.body.apartment["host"] = Object.assign({}, req.user._doc);
+	req.body.apartment["reservations"] = [];
+	req.body.apartment["reviews"] = [];
