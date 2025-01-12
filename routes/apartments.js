@@ -10,3 +10,10 @@ const express			= require("express"),
 	  greekUtils 		= require('greek-utils'),
 	  tr 				= require('transliteration').transliterate;
 
+	  var options = {
+		provider: 'opencage',
+		httpAdapter: 'https',
+		apiKey: "6b35a781fad343ddac3172ddaf206b45",
+		formatter:null
+	  };
+	  
