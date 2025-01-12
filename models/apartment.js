@@ -19,3 +19,13 @@ var apartmentSchema = mongoose.Schema({
 		events: { type: String, default: 'False'},
 		rent_days_min: Number
 	},
+
+	facilities: {
+		wifi: { type: String, default: 'False'},
+		air_conditioning: { type: String, default: 'False'},
+		heating: { type: String, default: 'False'},
+		kitchen: { type: String, default: 'False'},
+		tv: { type: String, default: 'False'},
+		parking: { type: String, default: 'False'},
+		elevator: { type: String, default: 'False'}
+	},
