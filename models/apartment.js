@@ -66,8 +66,23 @@ var apartmentSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User"
 	},
+	reservations: [
+		{
+			tenant: {
+				type: mongoose.Schema.Types.ObjectId,
+				ref: "User"
+			},
+			from: String,
+			to: String,
+			guests: String
+		}
+	],
 
 
+
+
+
+	
 
 
 
