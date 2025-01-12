@@ -29,3 +29,28 @@ var apartmentSchema = mongoose.Schema({
 		parking: { type: String, default: 'False'},
 		elevator: { type: String, default: 'False'}
 	},
+
+	location: {
+		address: String,
+		lat: Number,
+		lng: Number,
+		neighbourhood: String,
+		transportation: String
+	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
