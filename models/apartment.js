@@ -38,9 +38,12 @@ var apartmentSchema = mongoose.Schema({
 		transportation: String
 	},
 
+	main_image: {
+		url: String,
+		public_id: String
+	},
 
-
-
+	
 
 
 
