@@ -10,12 +10,15 @@ const express			= require("express"),
 	  greekUtils 		= require('greek-utils'),
 	  tr 				= require('transliteration').transliterate;
 
-	  var options = {
-		provider: 'opencage',
-		httpAdapter: 'https',
-		apiKey: "6b35a781fad343ddac3172ddaf206b45",
-		formatter:null
-	  };
+var options = {
+	provider: 'opencage',
+	httpAdapter: 'https',
+	apiKey: "6b35a781fad343ddac3172ddaf206b45",
+	formatter:null
+};
 	  
 
-	  var geocoder = NodeGeocoder(options);
+var geocoder = NodeGeocoder(options);
+
+// MULTER CONFIGURATION
+var upload = multer({ "dest": "../uploads/"});
