@@ -59,10 +59,15 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 		i += 1;
 	}}
 
-	
+
 		// Check if the renting dates are valid
 		var today = new Date();
 		var dd = String(today.getDate()).padStart(2, '0');
 		var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
 		var yyyy = today.getFullYear();
 		today = yyyy + '-' + mm + '-' + dd;
+
+		var d1 = Date.parse(req.body.availability_from),
+		d2 = Date.parse(req.body.availability_to),
+		one_day = 1000*60*60*24,
+		diff = Math.round((d2-d1)/one_day);
