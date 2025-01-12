@@ -52,7 +52,14 @@ var apartmentSchema = mongoose.Schema({
 	],
 
 
-
+	price_min: Number,
+	extra_charge_per_guest: Number,
+	availability: [
+		{
+			from: String,
+			to:	  String
+		}
+	],
 
 
 
