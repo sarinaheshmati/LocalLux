@@ -88,7 +88,7 @@ var apartmentSchema = mongoose.Schema({
 });
 
 
-
+module.exports = mongoose.model("Apartment", apartmentSchema);
 	
 
 
