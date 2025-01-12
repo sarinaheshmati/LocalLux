@@ -12,4 +12,4 @@ var reviewSchema = mongoose.Schema({
 	}
 });
 
-module.exports = mongose.model("Review", reviewSchema);
+module.exports = mongoose.model("Review", reviewSchema);
