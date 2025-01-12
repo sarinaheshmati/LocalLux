@@ -71,3 +71,11 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 		d2 = Date.parse(req.body.availability_to),
 		one_day = 1000*60*60*24,
 		diff = Math.round((d2-d1)/one_day);
+
+		if(req.body.availability_from.valueOf() < today.valueOf() ||
+		req.body.availability_to.valueOf() < today.valueOf() ||
+		req.body.availability_from.valueOf() > req.body.availability_to.valueOf() ||
+		diff < req.body.renting_rules.rent_days_min){
+		 req.flash("error", "Availability dates should be valid. Please try again.");
+		 return res.redirect("/apartments/new");
+	 }
