@@ -22,3 +22,10 @@ var geocoder = NodeGeocoder(options);
 
 // MULTER CONFIGURATION
 var upload = multer({ "dest": "../uploads/"});
+
+// CLOUDINARY CONFIGURATION
+cloudinary.config({
+	cloud_name: "meryf",
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET
+});
