@@ -79,3 +79,11 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 		 req.flash("error", "Availability dates should be valid. Please try again.");
 		 return res.redirect("/apartments/new");
 	 }
+
+	// Dates are valid
+	var availability = {
+		from: req.body.availability_from,
+		to:	  req.body.availability_to
+	};
+	req.body.apartment["availability"] = [];
+	req.body.apartment.availability.push(availability);
