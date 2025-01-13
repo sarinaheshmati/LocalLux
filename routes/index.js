@@ -166,3 +166,15 @@ router.get("/logout", function(req, res){
 	req.flash("success", "Logged out successfully");
 	res.redirect("/");
 });
+
+//profile edit route
+router.get("/:id/edit", function(req, res){
+	User.findById(req.params.user_id, function(err, foundUser){
+		if(err){
+			req.flash("error", err.message);
+			res.redirect("back");
+		}else{
+			res.render("users/edit", {user_id: req.params.id});
+		}
+	});
+});
