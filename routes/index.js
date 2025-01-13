@@ -36,3 +36,8 @@ cloudinary.config({
 router.get("/",function(req, res){
 	res.render("landing");
 });
+
+// Show the register form
+router.get("/register", function(req, res){
+	res.render("register");
+});
