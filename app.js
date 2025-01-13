@@ -29,8 +29,7 @@ var port = process.env.PORT || 3000,
 
 const startMongodb = function() {
 		mongoose.connect(db_url, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true
+		
 	})
 	.then(() => {console.log("Connected to Airbnb db");})
 	.catch(error => console.log(error.message));
