@@ -440,3 +440,40 @@ router.put("/:id",  middleware.checkApartmentOwnership, upload.array("images", 1
 		});
 	});
 });
+
+// Delete Route
+router.delete("/:id", middleware.checkApartmentOwnership, function(req,res){
+	// Find current user in db
+	User.findById(req.user._id, function(err, user){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("/users/" + user._id + "/host");
+		}else if(!user){
+			req.flash("error", "User not found");
+			return res.redirect("back");
+		}else{
+			for(const apartment of user.apartments){
+				if(apartment._id == req.params.id){
+					var index = user.apartments.indexOf(apartment);
+					var part1 = user.apartments.slice(0, index);
+					var part2 = user.apartments.slice(index+1,user.apartments.length);
+					user.apartments = part1.concat(part2);
+				}
+			}
+			user.save();
+		}
+	});
+
+	apartment.findByIdAndRemove(req.params.id, function(err){
+		if(err){
+			req.flash("error", err.message);
+			res.redirect("/apartments/" + req.params.id);
+		}else{
+			req.flash("success", "Place deleted successfully!");
+			res.redirect("/users/" + req.user._id + "/host");
+		}
+	});
+});
+
+
+module.exports = router;
