@@ -126,3 +126,36 @@ router.post("/register", upload.single("image"), function(req, res){
 router.get("/login", function(req, res){
 	res.render("login");
 });
+
+// handle login logic
+router.post("/login", passport.authenticate("local",
+	{
+		failureRedirect: "/login",
+		failureFlash: true
+	}), function(req, res){
+	
+	req.flash("success", "Welcome back " + req.user.username);
+
+	if(req.user.app_role[0] == "admin" && req.user.app_role.length == 1){
+		res.redirect("/users/" + req.user._id + "/admin");
+	}else if(req.user.app_role.includes("host")){
+		if(req.user.approved_by_admin == "just approved"){
+			User.findById(req.user._id, function(err, user){
+				if(err){
+					req.flash("error", err.message);
+					return res.redirect("back");
+				}
+
+				user.approved_by_admin = "approved";
+				user.save();
+
+				req.flash("success", " your registration in Airbnb as a host was approved successfully!");
+				res.redirect("/users/" + req.user._id + "/host");
+			});
+		}else{
+			res.redirect("/users/" + req.user._id + "/host");
+		}
+	}else{
+		res.redirect("/");
+	}
+});
