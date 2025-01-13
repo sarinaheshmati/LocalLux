@@ -1,13 +1,12 @@
 {
-  "name": "airbnb",
-  "version": "1.0.0",
-  "description": "An app for renting apartements",
+  "name": "LocalLux",
+  "version": "0.1.0",
+  "description": "Project for Software Engineering Course at AUT",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js --config nodemon.json"
+    "start": "node app.js"
   },
-  "author": "D.Fwteinos M.Fanou",
+  "author": "S.Heshmati, P.Alikhani, Y. Tafakor",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
