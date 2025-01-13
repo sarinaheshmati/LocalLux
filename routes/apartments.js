@@ -191,3 +191,15 @@ router.post("/", middleware.isLoggedIn, upload.array("images", 30)), async(req,r
 
 	});
 
+// SHOW Route - show more info about one specific appartement
+router.get("/:id", middleware.checkApartmentOwnership, function(req,res){
+	apartment.findById(req.params.id).populate("reviews").populate("host").populate("reservations.tenant")
+	.exec(function(err, foundApartment){
+		if(err){
+			req.flash("error", err.message);
+			res.redirect("back");
+		}else{
+			res.render("apartments/show", {apartment: foundApartment});
+		}
+	});
+});
