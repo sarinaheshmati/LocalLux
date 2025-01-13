@@ -344,3 +344,117 @@ router.post("/:user/:apartment", middleware.isLoggedIn, function(req,res){
 		});
 	});
 });
+
+// Delete Route
+router.delete("/:user/:apartment/:message", middleware.checkMessageOwnership, function(req,res){
+	User.findById(req.params.user).populate("messages.apartment").populate("messages.conversation")
+	.exec(function(err, foundUser){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("back");
+		}
+
+		Apartment.findById(req.params.apartment, function(err, apartment){
+			if(err){
+				req.flash("error", err.message);
+				return res.redirect("back");
+			}
+
+			for(var mail of foundUser.messages){
+				if(mail.apartment._id.equals(apartment._id)){
+					var i = 0;
+					for(var message of mail.conversation){
+						if(message._id.equals(req.params.message)){
+							var length = mail.conversation.length;
+
+							// Remove message from user's conversation
+							var part1 = mail.conversation.slice(0,i);
+							var part2 = mail.conversation.slice(i+1,length);
+							mail.conversation = part1.concat(part2);
+							foundUser.save();
+
+							var otherUser;
+							if(message.sender.equals(foundUser._id)){
+								otherUser = message.recipient._id;
+							}else{
+								otherUser = message.sender._id;
+							}
+
+							User.findById(otherUser).populate("messages.apartment")
+							.populate("messages.conversation").exec(function(err, otherUser){
+								if(err){
+									req.flash("error", err.message);
+									return res.redirect("back");
+								}
+
+								// Check if the other user has deleted this message as well
+								var found = false;
+								for(var mail of otherUser.messages){
+									if(mail.apartment._id.equals(apartment._id)){
+										for(var message of mail.conversation){
+											if(message._id.equals(req.params.message)){
+												found = true;
+												break;
+											}
+										}
+										break;
+									}
+								}
+
+								// If both users have deleted this message,
+								// it should be removed from the db as well
+								if(found == false){
+									Message.findByIdAndRemove(req.params.message, function(err){
+										if(err){
+											req.flash("error", err.message);
+											return res.redirect("back");
+										}
+
+										req.flash("success", "Message was deleted successfully.");
+										if(foundUser._id.equals(apartment.host)){
+											return res.redirect("/messages/host/" + foundUser._id + "/"
+														 + apartment._id);
+										}else{
+											return res.redirect(url.format({
+												pathname: "/messages/tenant/" + foundUser._id + "/"
+													+ apartment._id,
+												query: {
+													"num_days": req.query.num_days,
+													"check_in": req.query.check_in,
+													"guests": req.query.guests,
+													"check_out": req.query.check_out
+												}
+											}));
+										}
+									});
+								}else{
+									req.flash("success", "Message was deleted successfully.");
+									if(foundUser._id.equals(apartment.host)){
+										return res.redirect("/messages/host/" + foundUser._id + "/"
+												+ apartment._id);
+									}else{
+										return res.redirect(url.format({
+											pathname: "/messages/tenant/" + foundUser._id + "/"
+												+ apartment._id,
+											query: {
+												"num_days": req.query.num_days,
+												"check_in": req.query.check_in,
+												"guests": req.query.guests,
+												"check_out": req.query.check_out
+											}
+										}));
+									}
+								}
+							});
+							break;
+						}
+						i += 1;
+					}
+					break;
+				}
+			}
+		});
+	});
+});
+
+module.exports = router;
