@@ -203,3 +203,15 @@ router.get("/:id", middleware.checkApartmentOwnership, function(req,res){
 		}
 	});
 });
+
+// Edit Route
+router.get("/:id/edit", middleware.checkApartmentOwnership, function(req,res){
+	apartment.findById(req.params.id).populate("host").exec(function(err, foundApartment){
+		if(err){
+			req.flash("error", err.message);
+			res.redirect("back");
+		}else{
+			res.render("apartments/edit", {apartment: foundApartment});
+		}
+	});
+});
