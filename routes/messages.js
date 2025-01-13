@@ -179,3 +179,168 @@ router.get("/:user/:apartment/new", middleware.isLoggedIn, function(req,res){
 		});
 	});
 });
+
+// Create Route
+router.post("/:user/:apartment", middleware.isLoggedIn, function(req,res){
+	User.findById(req.params.user).populate("messages.apartment").populate("messages.conversation")
+	.exec(function(err, user){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("back");
+		}
+
+		Apartment.findById(req.params.apartment)
+		.populate({ path: "host",
+				   	populate: { path: "messages", populate: { path: "apartment conversation" } } })
+		.exec(function(err, apartment){
+			if(err){
+				req.flash("error", err.message);
+				return res.redirect("back");
+			}
+
+			var sender = user._id;
+			var recipient = req.query.recipient;
+
+			var today = new Date();
+			var dd = String(today.getDate()).padStart(2, '0');
+			var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+			var yyyy = today.getFullYear();
+			today = dd + '-' + mm + '-' + yyyy;
+
+			var message = {
+				subject:	req.body.subject,
+				content:	req.body.content,
+				date:		today,
+				sender:		sender,
+				recipient:	recipient
+			};
+
+			Message.create(message, function(err, newMessage){
+				if(err){
+					req.flash("error", err.message);
+					return res.redirect("back");
+				}
+
+				newMessage.save();
+
+
+				var updated = false;
+
+				// Add new message in user's mail
+				for(var mail of user.messages){
+					if(mail.apartment._id.equals(apartment._id)){
+						mail.conversation.push(newMessage);
+						user.save();
+						updated = true;
+						break;
+					}
+				}
+
+				if(updated == false){
+					var conversation = [];
+					conversation.push(newMessage);
+
+					var mail = {
+						apartment: apartment._id,
+						conversation: conversation
+					};
+
+					user.messages.push(mail);
+					user.save();
+				}
+
+				// If 'user' is the tenant
+				if(user._id.equals(apartment.host._id) == false){
+					updated = false;
+
+					// Add new massage in host's mail
+					for(var mail of apartment.host.messages){
+						if(mail.apartment._id.equals(apartment._id)){
+							mail.conversation.push(newMessage);
+							apartment.host.save();
+							updated = true;
+							break;
+						}
+					}
+
+					if(updated == false){
+						var conversation = [];
+						conversation.push(newMessage);
+
+						var mail = {
+							apartment: apartment._id,
+							conversation: conversation
+						};
+
+						apartment.host.messages.push(mail);
+						apartment.host.save();
+					}
+
+					req.flash("success", "Your message was sent successfully.");
+					if(user._id.equals(apartment.host._id)){
+						res.redirect("/messages/host/" + user._id + "/" + apartment._id);
+					}else{
+						res.redirect(url.format({
+							pathname: "/messages/tenant/" + user._id + "/" + apartment._id,
+							query: {
+								"num_days": req.query.num_days,
+								"check_in": req.query.check_in,
+								"guests": req.query.guests,
+								"check_out": req.query.check_out
+							}
+						}));
+					}
+				}else{										// Host is the user and tenant the recipient
+
+					User.findById(recipient).populate("messages.apartment")
+					.populate("messages.conversation").exec(function(err, recipient){
+						if(err){
+							req.flash("error", err.message);
+							return res.redirect("back");
+						}
+
+						updated = false;
+
+						// Add new message in recipient's mail
+						for(var mail of recipient.messages){
+							if(mail.apartment._id.equals(apartment._id)){
+								mail.conversation.push(newMessage);
+								recipient.save();
+								updated = true;
+								break;
+							}
+						}
+
+						if(updated == false){
+							var conversation = [];
+							conversation.push(newMessage);
+
+							var mail = {
+								apartment: apartment._id,
+								conversation: conversation
+							};
+
+							recipient.messages.push(mail);
+							recipient.save();
+						}
+
+						req.flash("success", "Your message was sent successfully.");
+						if(user._id.equals(apartment.host._id)){
+							res.redirect("/messages/host/" + user._id + "/" + apartment._id);
+						}else{
+							res.redirect(url.format({
+								pathname: "/messages/tenant/" + user._id + "/" + apartment._id,
+								query: {
+									"num_days": req.query.num_days,
+									"check_in": req.query.check_in,
+									"guests": req.query.guests,
+									"check_out": req.query.check_out
+								}
+							}));
+						}
+					});
+				}
+			});
+		});
+	});
+});
