@@ -142,3 +142,40 @@ router.get("/host/pages/:inboxPage/:sentPage", function(req,res){
 										inboxPage: req.params.inboxPage, sentPage: req.params.sentPage,
 										apartment: apartment, results_per_page: results_per_page });
 });
+
+// Show Route for host
+router.get("/host/:host_id/:id/:message_id", middleware.checkApartmentOwnership, function(req,res){
+	Message.findById(req.params.message_id).populate("sender").populate("recipient")
+	.exec(function(err, message){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("back");
+		}
+
+		res.render("messages/host/show", { message: message, apartment: req.params.id });
+	});
+});
+
+// New Route
+router.get("/:user/:apartment/new", middleware.isLoggedIn, function(req,res){
+	User.findById(req.params.user, function(err, user){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("back");
+		}
+
+		Apartment.findById(req.params.apartment).populate("host").exec(function(err, apartment){
+			if(err){
+				req.flash("error", err.message);
+				return res.redirect("back");
+			}
+
+			var recipient = JSON.parse(req.query.recipient);
+
+			res.render("messages/new", { sender: user, recipient: recipient,
+										 apartment: apartment, num_days: req.query.num_days,
+										 check_in: req.query.check_in, guests: req.query.guests,
+										 check_out: req.query.check_out });
+		});
+	});
+});
