@@ -41,3 +41,83 @@ router.get("/",function(req, res){
 router.get("/register", function(req, res){
 	res.render("register");
 });
+
+
+// Handle sing up logic
+router.post("/register", upload.single("image"), function(req, res){
+	req.body.user.picture = [];
+
+	// If user has uploaded a profile picture
+	if(req.file){
+		cloudinary.uploader.upload(req.file.path, function(result){
+			// We want to store the image's secure_url (https://)
+			req.body.user["picture"] = {
+				url: result.secure_url,
+				public_id: result.public_id
+			}
+
+			req.body.user.username = req.body.username;
+			req.body.user["messages"] = [];
+			req.body.user["apartments"] = [];
+			req.body.user["reviews"] = [];
+
+			if(req.body.password != req.body.confirm_password){
+				req.flash("error", "Password confirmation failed. Please try again.");
+				res.redirect("/register");
+			}else{
+				req.body.user.password = req.body.password;
+				User.register(req.body.user, req.body.password, function(err, user){
+					if(err){
+						req.flash("error", err.message);
+						return res.redirect("/register");
+					}
+
+					passport.authenticate("local")(req, res, function(){
+						req.flash("success", "Welcome to Airbnb " + user.username);
+						if(user.app_role.includes("host")){
+							req.flash("warning",
+									  "The approval of your registration in Airbnb as a host is pending");
+							return res.redirect("/users/" + req.user._id + "/host");
+						}
+						return res.redirect("/");
+					})
+				});
+			}
+		});
+	}else{
+		var	tempUser = new User({});
+		// Use default profile picture
+		req.body.user.picture = tempUser.picture;
+
+		req.body.user.username = req.body.username;
+		req.body.user["messages"] = [];
+		req.body.user["apartments"] = [];
+		req.body.user["reviews"] = [];
+
+		if(req.body.password != req.body.confirm_password){
+			req.flash("error", "Password confirmation failed. Please try again.");
+			res.redirect("/register");
+		}else{
+			req.body.user.password = req.body.password;
+
+			var temp = new User();
+			req.body.user.approved_by_admin = temp.approved_by_admin;
+
+			User.register(req.body.user, req.body.password, function(err, user){
+				if(err){
+					req.flash("error", err.message);
+					return res.redirect("/register");
+				}
+				passport.authenticate("local")(req, res, function(){
+					req.flash("success", "Welcome to Airbnb " + user.username);
+					if(user.app_role.includes("host")){
+						req.flash("warning",
+								  "The approval of your registration in Airbnb as a host is pending");
+						return res.redirect("/users/" + req.user._id + "/host");
+					}
+					res.redirect("/");
+				})
+			});
+		}
+	}
+});
