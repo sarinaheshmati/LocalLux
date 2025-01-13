@@ -14,3 +14,20 @@ var storage = multer.diskStorage({
 		callback(null, Date.now() + file.originalname);
 	}
 });
+
+var imageFilter = function(req, file, cb){
+	// Accept image files only
+	if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)){
+		return cb(new Error("Only image files are allowed!"), false);
+	}
+	cb(null,true);
+};
+// We pass the configuration variables
+var upload = multer({storage: storage, fileFilter: imageFilter});
+
+// CLOUDINARY CONFIGURATION
+cloudinary.config({
+	cloud_name: "meryf",
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET
+});
