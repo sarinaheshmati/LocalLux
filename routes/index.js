@@ -178,3 +178,96 @@ router.get("/:id/edit", function(req, res){
 		}
 	});
 });
+
+// update Route
+router.put("/:id", upload.single("image"), function(req,res){
+	User.findById(req.params.id, async function(err, foundUser){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("/");
+		}
+
+		// If the user uploaded a new profile picture
+		if(req.file){
+			try{
+				// If the user has uploaded a picture before, delete it before uploading the new one
+				if(foundUser.picture.public_id != "Default"){
+					await cloudinary.v2.uploader.destroy(foundUser.picture.public_id);
+				}
+
+				// New profile picture will be in 'result'
+				var result = await cloudinary.v2.uploader.upload(req.file.path);
+				// We want to store the image's secure_url (https://) and public id
+				req.body.user["picture"] = {
+					url: result.secure_url,
+					public_id: result.public_id
+				};
+			}catch(err){
+				req.flash("error", err.message);
+				return res.redirect("back");
+			}
+		}
+
+		if(req.body.deleteImage){
+			try{
+				// Remove picture from cloudinary
+				await cloudinary.v2.uploader.destroy(foundUser.picture.public_id);
+
+				// Add default profile picture to the user
+				var tempUser = new User({});
+				req.body.user["picture"] = Object.assign({},tempUser.picture);
+			}catch(err){
+				req.flash("error", err.message);
+				return res.redirect("back");
+			}
+		}
+
+		newUsername = false;
+		// If the user entered a new username, he/she will have to login again
+		if(foundUser.username != req.body.username){
+			newUsername = true;
+		}
+
+		// If the user entered a new password, reset it
+		if(foundUser.password != req.body.password || foundUser.password != req.body.confirm_password ){
+			if(!req.body.confirm_password){
+				req.flash("error", "Please confirm your password first.");
+				return res.redirect("/" + req.user._id + "/edit");
+			}
+			if(req.body.password != req.body.confirm_password){
+				req.flash("error", "Password and confirmation password should match. Please try again.");
+				return res.redirect("/" + req.user._id + "/edit");
+			}
+
+			await foundUser.setPassword(req.body.password);
+			await foundUser.save();
+			const login = util.promisify(req.login.bind(req));
+			await login(foundUser);
+		}
+
+		req.body.user.username = req.body.username;
+		req.body.user.password = req.body.password;
+		req.body.user.approved_by_admin = foundUser.approved_by_admin;
+
+		User.findByIdAndUpdate(req.params.id, req.body.user, function(err, updatedUser){
+			if(err){
+				req.flash("error", err.message);
+				return res.redirect("/");
+			}
+
+			if(newUsername){
+				req.flash("success","Profile updated succesfully! Please login again.");
+				return res.redirect("/login");
+			}
+
+			req.flash("success","Profile updated succesfully!");
+			if(updatedUser.app_role.includes("host")){
+				res.redirect("/users/" + updatedUser._id + "/host");
+			}else{
+				res.redirect("/");
+			}
+		});
+	});
+});
+
+module.exports = router;
