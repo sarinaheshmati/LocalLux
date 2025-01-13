@@ -31,3 +31,8 @@ cloudinary.config({
 	api_key: process.env.CLOUDINARY_API_KEY,
 	api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Welcome Page
+router.get("/",function(req, res){
+	res.render("landing");
+});
