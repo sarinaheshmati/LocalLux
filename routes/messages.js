@@ -66,3 +66,59 @@ router.get("/tenant/:tenant_id/:apartment", middleware.isTenant, function(req,re
 		});
 	});
 });
+
+// Index Route for host
+router.get("/host/:host_id/:id", middleware.checkApartmentOwnership, function(req,res){
+	User.findById(req.params.host_id).populate("apartments").populate("messages.apartment")
+	.populate({ path:"messages.conversation", populate: { path: "sender recipient" }})
+	.exec(function(err, host){
+		if(err){
+			req.flash("error", err.message);
+			return res.redirect("back");
+		}
+
+		var apartment = {};
+		for(apartment of host.apartments){
+			if(apartment._id.equals(req.params.id)){	
+				break;
+			}
+		}
+
+		if(Object.keys(apartment).length == 0){
+			req.flash("error", "Could not find apartment.");
+			return res.redirect("back");
+		}
+
+		var inbox = [];
+		var sent = [];
+		
+		// console.log(host.messages);
+		
+		for(var mail of host.messages){
+			if(mail.apartment._id.equals(apartment._id)){
+				for(var message of mail.conversation){
+
+					if(message.sender._id.equals(host._id)){
+						sent.push(message);
+					}else{
+						inbox.push(message);
+					}
+				}
+				break;
+			}
+		}
+
+		var str_apartment = JSON.stringify(apartment);
+		var str_inbox = JSON.stringify(inbox);
+		var str_sent = JSON.stringify(sent);
+
+		res.redirect(url.format({
+			pathname: "/messages/host/pages/1/1",
+			query: {
+				"apartment": str_apartment,
+				"inbox": str_inbox,
+				"sent": str_sent
+			}
+		}));
+	});
+});
