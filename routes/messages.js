@@ -122,3 +122,23 @@ router.get("/host/:host_id/:id", middleware.checkApartmentOwnership, function(re
 		}));
 	});
 });
+
+// Pagination
+router.get("/host/pages/:inboxPage/:sentPage", function(req,res){
+	
+	var apartment = JSON.parse(req.query.apartment);
+	var inbox = JSON.parse(req.query.inbox);
+	var sent = JSON.parse(req.query.sent);
+
+	var results_per_page = 10,
+		inbox_start			 = (req.params.inboxPage - 1) * results_per_page,
+		sent_start			 = (req.params.sentPage - 1) * results_per_page;
+
+	var inbox_paginated = inbox.slice(inbox_start,inbox_start + results_per_page);
+	var sent_paginated = sent.slice(sent_start,sent_start + results_per_page);
+	
+	res.render("messages/host/index", { inbox: inbox_paginated, sent: sent_paginated,
+										all_inbox: inbox, all_sent: sent,
+										inboxPage: req.params.inboxPage, sentPage: req.params.sentPage,
+										apartment: apartment, results_per_page: results_per_page });
+});
